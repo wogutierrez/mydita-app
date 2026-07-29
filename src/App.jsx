@@ -3,12 +3,41 @@ import "./App.css";
 
 function App() {
   const [count, setCount] = useState(0);
-
   // Our notepad that remembers if we see "CATEGORIES" or "PRODUCTS"
   const [currentView, setCurrentView] = useState("CATEGORIES");
-
   // Our notepad that remembers which category row was clicked
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // Our notepad basket that tracks our items array: starting perfectly empty []
+  const [cart, setCart] = useState([]);
+  // THE STICKY NOTE: Remembers the single last product clicked to show the clerk
+  const [lastItemAdded, setLastItemAdded] = useState(null);
+
+  const addToCart = (product) => {
+    // Action 1: Write down the clicked product on our temporary sticky note memory
+    setLastItemAdded(product);
+
+    setCart((currentCart) => {
+      const existingItem = currentCart.find((item) => item.id === product.id);
+
+      if (existingItem) {
+        // If it exists, loop through the list and add +1 to the quantity tag of ONLY that item
+        return currentCart.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        // If it's brand new, keep all existing items and add the new product with a starting quantity of 1
+        return [...currentCart, { ...product, quantity: 1 }];
+      }
+    });
+  };
+
+  const cartTotal = cart.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-slate-900 text-slate-100 flex flex-col">
@@ -26,22 +55,33 @@ function App() {
       {/* 2. THE MAIN WORKSPACE */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* TOP PANEL: Compressed Live Tape Monitor (~10% Height to maximize button sizes below) */}
+
         <section className="h-[10%] bg-slate-850 border-b border-slate-700 flex items-center justify-between px-4 py-1 shrink-0">
           <div className="flex flex-col">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
               Last Item Added
             </span>
             <div className="text-sm font-bold text-slate-200">
-              2 × Fresh Bread{" "}
-              <span className="text-slate-400 font-normal">($2.40)</span>
+              {lastItemAdded ? (
+                <span>
+                  {cart.find((item) => item.id === lastItemAdded.id)
+                    ?.quantity || 1}{" "}
+                  × {lastItemAdded.name}
+                </span>
+              ) : (
+                <span className="text-slate-500 italic font-normal">
+                  Basket Empty
+                </span>
+              )}
             </div>
           </div>
           <div className="text-right flex flex-col items-end">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
               Total Order
             </span>
+            {/* This pulls from our running calculation above */}
             <span className="text-2xl font-black text-emerald-400 leading-tight">
-              $2.40
+              ${cartTotal.toFixed(2)}
             </span>
           </div>
         </section>
@@ -57,6 +97,7 @@ function App() {
           {/* GRID LAYER: Shifted to take exactly 65% of the remaining layout space */}
           <div className="h-[65%] grid grid-cols-3 grid-rows-3 gap-2 mb-2 overflow-hidden">
             {/* {CATEGORIES.slice(0, 9).map((category) => ( */}
+
             {(currentView === "CATEGORIES"
               ? CATEGORIES
               : PRODUCTS.filter(
@@ -68,21 +109,32 @@ function App() {
                 <button
                   key={category.id}
                   onClick={() => {
-                    // 1. Save the name of the clicked category to our state notepad
-                    setSelectedCategory(category.name);
-                    // 2. Flip the view state over to show products
-                    setCurrentView("PRODUCTS");
+                    if (currentView === "CATEGORIES") {
+                      // ✅ 1. Save the category name to the correct selectedCategory notepad
+                      setSelectedCategory(category.name);
+                      // ✅ 2. Use the correct plural word "PRODUCTS" to match the rest of the app
+                      setCurrentView("PRODUCTS");
+                    } else {
+                      // if we are already looking at a product, add it to the basket.
+                      addToCart(category);
+                    }
+
+                    // // 1. Save the name of the clicked category to our state notepad
+                    // setSelectedCategory(category.name);
+                    // // 2. Flip the view state over to show products
+                    // setCurrentView("PRODUCTS");
                   }}
                   className={`${category.color} w-full h-full rounded-2xl p-3 flex flex-col justify-end items-start font-black text-sm sm:text-base shadow-lg active:scale-95 transition-transform`}
                 >
                   <span className="leading-tight break-words text-left">
                     {category.name}
 
-                    {currentView === "PRODUCTS" && (
-                      <span className="block text-[11px] font-normal opacity-85 mt-0.5">
-                        ${category.price.toFixed(2)}
-                      </span>
-                    )}
+                    {currentView === "PRODUCTS" &&
+                      category.price !== undefined && (
+                        <span className="block text-[11px] font-normal opacity-85 mt-0.5">
+                          ${category.price.toFixed(2)}
+                        </span>
+                      )}
                   </span>
                 </button>
               ))}
