@@ -301,7 +301,8 @@ function App() {
                   key={item.id}
                   className="bg-slate-800 p-3 rounded-2xl flex items-center justify-between border border-slate-700 shadow-md"
                 >
-                  <div className="flex flex-col">
+                  {/* LEFT SIDE: Product Name, Price, and Quantity breakdown */}
+                  <div className="flex flex-col pr-2">
                     <span className="font-bold text-sm text-slate-100">
                       {item.name}
                     </span>
@@ -313,21 +314,29 @@ function App() {
                     </span>
                   </div>
 
-                  {/* CHUNKY DECREMENT BUTTON */}
-                  <button
-                    onClick={() => removeFromCart(item.id)}
-                    className="h-10 w-12 bg-rose-600/20 text-rose-400 border border-rose-500/40 font-black rounded-xl text-lg flex items-center justify-center active:bg-rose-600 active:text-white active:scale-95 transition-transform"
-                  >
-                    −
-                  </button>
+                  {/* RIGHT SIDE: Unified Plus/Minus Control Block */}
+                  <div className="flex items-center bg-slate-900/60 p-1 rounded-xl border border-slate-700 shrink-0">
+                    {/* SUBTRACT 1 BUTTON */}
+                    <button
+                      onClick={() => removeFromCart(item.id)}
+                      className="h-10 w-11 bg-rose-600/20 text-rose-400 font-black rounded-lg text-lg flex items-center justify-center active:bg-rose-600 active:text-white active:scale-95 transition-transform"
+                    >
+                      −
+                    </button>
 
-                  {/* ADD 1 BUTTON */}
-                  <button
-                    onClick={() => addToCart(item)}
-                    className="h-10 w-11 bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 font-black rounded-xl text-lg flex items-center justify-center active:bg-emerald-600 active:text-white active:scale-95 transition-transform"
-                  >
-                    +
-                  </button>
+                    {/* QUANTITY DISPLAY PILL */}
+                    <span className="w-9 text-center font-black text-sm text-slate-200">
+                      {item.quantity}
+                    </span>
+
+                    {/* ADD 1 BUTTON */}
+                    <button
+                      onClick={() => addToCart(item)}
+                      className="h-10 w-11 bg-emerald-600/20 text-emerald-400 font-black rounded-lg text-lg flex items-center justify-center active:bg-emerald-600 active:text-white active:scale-95 transition-transform"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               ))
             )}
