@@ -7,11 +7,12 @@ function App() {
   const [currentView, setCurrentView] = useState("CATEGORIES");
   // Our notepad that remembers which category row was clicked
   const [selectedCategory, setSelectedCategory] = useState(null);
-
   // Our notepad basket that tracks our items array: starting perfectly empty []
   const [cart, setCart] = useState([]);
   // THE STICKY NOTE: Remembers the single last product clicked to show the clerk
   const [lastItemAdded, setLastItemAdded] = useState(null);
+  // OUR ON/OFF SWITCH: Remembers whether the cart review drawer is open (true) or closed (false)
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const addToCart = (product) => {
     // Action 1: Write down the clicked product on our temporary sticky note memory
@@ -38,6 +39,24 @@ function App() {
     (total, item) => total + item.price * item.quantity,
     0
   );
+
+  // THE SMART SUBTRACTOR: Reduces item count by 1, or removes it completely if quantity hits 0
+  const removeFromCart = (productId) => {
+    setCart((currentCart) => {
+      return (
+        currentCart
+          .map((item) => {
+            if (item.id === productId) {
+              // Subtract 1 from current quantity
+              return { ...item, quantity: item.quantity - 1 };
+            }
+            return item;
+          })
+          // Keep only items whose quantity is greater than 0
+          .filter((item) => item.quantity > 0)
+      );
+    });
+  };
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-slate-900 text-slate-100 flex flex-col">
@@ -182,7 +201,11 @@ function App() {
           {/* PERSISTENT NAVIGATION BAR: Upgraded to a massive panel (~18% height) making the bottom keys as tall as the grid buttons */}
           <div className="h-[18%] grid grid-cols-3 gap-2 shrink-0">
             {/* Review & Pay Button (Shopping Cart + Checkmark) */}
-            <button className="bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl flex flex-col items-center justify-center gap-1 shadow-xl active:scale-95 transition-transform">
+
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl flex flex-col items-center justify-center gap-1 shadow-xl active:scale-95 transition-transform"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -248,6 +271,86 @@ function App() {
           </div>
         </section>
       </main>
+
+      {/* BASKET REVIEW OVERLAY: Takes over the full screen when open */}
+      {isCartOpen && (
+        <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex flex-col p-4 overflow-hidden">
+          {/* OVERLAY HEADER */}
+          <div className="flex items-center justify-between pb-3 border-b border-slate-700 shrink-0">
+            <h2 className="text-lg font-black tracking-wide text-slate-100">
+              Review Order ({cart.reduce((sum, item) => sum + item.quantity, 0)}{" "}
+              items)
+            </h2>
+            <button
+              onClick={() => setIsCartOpen(false)}
+              className="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl font-bold text-xs text-slate-300 active:scale-95 transition-transform"
+            >
+              ✕ Close
+            </button>
+          </div>
+
+          {/* ITEMIZED BASKET LIST */}
+          <div className="flex-1 overflow-y-auto py-3 space-y-2">
+            {cart.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-500 italic">
+                Basket is empty. Select items from the main screen!
+              </div>
+            ) : (
+              cart.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-slate-800 p-3 rounded-2xl flex items-center justify-between border border-slate-700 shadow-md"
+                >
+                  <div className="flex flex-col">
+                    <span className="font-bold text-sm text-slate-100">
+                      {item.name}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      ${item.price.toFixed(2)} × {item.quantity} ={" "}
+                      <strong className="text-emerald-400">
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </strong>
+                    </span>
+                  </div>
+
+                  {/* CHUNKY DECREMENT BUTTON */}
+                  <button
+                    onClick={() => removeFromCart(item.id)}
+                    className="h-10 w-12 bg-rose-600/20 text-rose-400 border border-rose-500/40 font-black rounded-xl text-lg flex items-center justify-center active:bg-rose-600 active:text-white active:scale-95 transition-transform"
+                  >
+                    −
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* OVERLAY FOOTER & CONFIRM ACTION */}
+          <div className="pt-3 border-t border-slate-700 flex flex-col gap-2 shrink-0">
+            <div className="flex justify-between items-center px-1">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Total Due:
+              </span>
+              <span className="text-3xl font-black text-emerald-400">
+                ${cartTotal.toFixed(2)}
+              </span>
+            </div>
+
+            <button
+              disabled={cart.length === 0}
+              onClick={() => {
+                alert(`Transaction Confirmed! Total: $${cartTotal.toFixed(2)}`);
+                setCart([]);
+                setLastItemAdded(null);
+                setIsCartOpen(false);
+              }}
+              className="w-full py-4 bg-emerald-600 disabled:bg-slate-800 disabled:text-slate-600 hover:bg-emerald-500 text-white font-black text-base uppercase tracking-wider rounded-2xl shadow-2xl active:scale-95 transition-transform"
+            >
+              Confirm Transaction
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
