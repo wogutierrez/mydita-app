@@ -320,6 +320,14 @@ function App() {
                   >
                     −
                   </button>
+
+                  {/* ADD 1 BUTTON */}
+                  <button
+                    onClick={() => addToCart(item)}
+                    className="h-10 w-11 bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 font-black rounded-xl text-lg flex items-center justify-center active:bg-emerald-600 active:text-white active:scale-95 transition-transform"
+                  >
+                    +
+                  </button>
                 </div>
               ))
             )}
